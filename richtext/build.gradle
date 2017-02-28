@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'maven'
 
 def version_code = 43
 def version_name = "2.4.0"
@@ -27,6 +27,12 @@ android {
     }
 }
 
+repositories{
+    flatDir{
+        dirs 'libs'
+    }
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
@@ -35,21 +41,11 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
 }
 
-publish {
-
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    //bintray.com用户名
-    userOrg = properties.getProperty("bintray.user")
-    //jcenter上的路径
-    groupId = "com.zzhoujay.richtext"
-    //项目名称
-    artifactId = 'richtext'
-    //版本号
-    publishVersion = version_name
-    //描述，不重要
-    desc = 'Android端的富文本解析器'
-    //网站，不重要
-    website = 'https://github.com/zzhoujay/RichTex'
-
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: "file://" + file("maven"))
+        pom.groupId = "com.zzhoujay.markdown"
+        pom.artifactId = 'richtext'
+        pom.version = version_name
+    }
 }

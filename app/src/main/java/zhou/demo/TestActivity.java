@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import com.zzhoujay.richtext.RichText;
+import com.zzhoujay.richtext.RichTextConfig;
 
 /**
  * Created by zhou on 16-10-22.
@@ -59,7 +60,7 @@ public class TestActivity extends AppCompatActivity {
             "<br>" +
             "</div>";
 
-    private RichText richText;
+    private RichTextConfig.RichTextConfigBuild richText;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

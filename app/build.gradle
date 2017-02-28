@@ -22,11 +22,20 @@ android {
     }
 }
 
+repositories{
+    flatDir{
+        def markdownLibs = '../richtext/libs'
+        def richtextLibs = '../richtext/build/outputs/aar'
+        dirs markdownLibs, richtextLibs
+    }
+}
+
 dependencies {
+    compile(name:'markdown-release', ext:'aar')
+//    compile(name:'richtext-release', ext:'aar')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
-    compile project(':richtext')
-//    compile 'com.zzhoujay.richtext:richtext:2.0.0'
     compile 'com.android.support:recyclerview-v7:24.0.0'
+    compile 'com.squareup.okhttp3:okhttp:3.5.0'
 }

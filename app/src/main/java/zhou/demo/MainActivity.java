@@ -23,13 +23,12 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.zzhoujay.richtext.ImageHolder;
 import com.zzhoujay.richtext.RichText;
 import com.zzhoujay.richtext.callback.ImageFixCallback;
 import com.zzhoujay.richtext.callback.OnImageClickListener;
 import com.zzhoujay.richtext.callback.OnImageLongClickListener;
-import com.zzhoujay.richtext.callback.OnURLClickListener;
+import com.zzhoujay.richtext.callback.OnUrlClickListener;
 import com.zzhoujay.richtext.callback.OnUrlLongClickListener;
 import com.zzhoujay.richtext.ext.HtmlTagHandler;
 
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-        RichText.from(IMAGE1).clickable(true).urlClick(new OnURLClickListener() {
+        RichText.from(IMAGE1).clickable(true).urlClick(new OnUrlClickListener() {
             @Override
             public boolean urlClicked(String url) {
                 Toast.makeText(getApplicationContext(), url, Toast.LENGTH_SHORT).show();

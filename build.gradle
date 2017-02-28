@@ -4,6 +4,7 @@ buildscript {
     repositories {
         jcenter()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.3'
         classpath 'com.novoda:bintray-release:0.3.4'
@@ -16,6 +17,10 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        maven { url 'https://jitpack.io' }
+        maven {
+            url 'https://github.com/Fearimdly/Markdown/tree/master/markdown/maven'
+        }
     }
 }
 

@@ -113,6 +113,16 @@ public final class RichTextConfig {
             this.clickable = 0;
             this.cacheType = CacheType.LAYOUT;
             this.imageGetter = new DefaultImageGetter();
+            this.linkFixCallback = new LinkFixCallback() {
+                @Override
+                public void fix(LinkHolder holder) {
+                    String url = holder.getUrl();
+                    if (url.startsWith("com.lesschat.")) {
+                        holder.setColor(Color.parseColor("#54CFC7"));
+                        holder.setUnderLine(false);
+                    }
+                }
+            };
         }
 
         /**
@@ -176,8 +186,14 @@ public final class RichTextConfig {
          * @param callback LinkFixCallback
          * @return RichTextConfigBuild
          */
-        public RichTextConfigBuild linkFix(LinkFixCallback callback) {
-            this.linkFixCallback = callback;
+        public RichTextConfigBuild linkFix(final LinkFixCallback callback) {
+            this.linkFixCallback = new LinkFixCallback() {
+                @Override
+                public void fix(LinkHolder holder) {
+                    callback.fix(holder);
+                    linkFixCallback.fix(holder);
+                }
+            };
             return this;
         }
 
