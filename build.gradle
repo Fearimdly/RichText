@@ -18,9 +18,7 @@ allprojects {
     repositories {
         jcenter()
         maven { url 'https://jitpack.io' }
-        maven {
-            url 'https://github.com/Fearimdly/Markdown/tree/master/markdown/maven'
-        }
+        maven { url 'https://raw.githubusercontent.com/Fearimdly/Markdown/master/markdown/maven' }
     }
 }
 

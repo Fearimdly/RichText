@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
-def version_code = 43
-def version_name = "2.4.0"
+def version_code = 44
+def version_name = "2.4.1"
 
 android {
     compileSdkVersion 24
@@ -11,7 +11,7 @@ android {
     resourcePrefix "zhou_"
 
     defaultConfig {
-        minSdkVersion 7
+        minSdkVersion 14
         targetSdkVersion 24
         versionCode version_code
         versionName version_name
@@ -37,14 +37,14 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
-    compile 'com.zzhoujay.markdown:markdown:1.0.4'
+    compile 'com.worktile.markdown:markdown:1.0.5'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
 }
 
 uploadArchives {
     repositories.mavenDeployer {
         repository(url: "file://" + file("maven"))
-        pom.groupId = "com.zzhoujay.markdown"
+        pom.groupId = "com.worktile.richtext"
         pom.artifactId = 'richtext'
         pom.version = version_name
     }
