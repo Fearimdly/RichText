@@ -116,11 +116,8 @@ public final class RichTextConfig {
             this.linkFixCallback = new LinkFixCallback() {
                 @Override
                 public void fix(LinkHolder holder) {
-                    String url = holder.getUrl();
-                    if (url.startsWith("com.lesschat.")) {
-                        holder.setColor(Color.parseColor("#54CFC7"));
-                        holder.setUnderLine(false);
-                    }
+                    holder.setColor(Color.parseColor("#54CFC7"));
+                    holder.setUnderLine(false);
                 }
             };
         }
