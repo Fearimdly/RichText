@@ -47,7 +47,7 @@ public final class RichTextConfig {
 
     private RichTextConfig(RichTextConfigBuild config) {
         this(config.source, config.richType, config.autoFix, config.resetSize, config.cacheType, config.imageFixCallback,
-                config.linkFixCallback, config.noImage, config.clickable, config.onImageClickListener,
+                config.defaultLinkCallback, config.noImage, config.clickable, config.onImageClickListener,
                 config.onUrlClickListener, config.onImageLongClickListener, config.onUrlLongClickListener,
                 config.placeHolder, config.errorImage, config.imageGetter);
     }
@@ -88,7 +88,8 @@ public final class RichTextConfig {
         @CacheType
         int cacheType;
         ImageFixCallback imageFixCallback;
-        LinkFixCallback linkFixCallback;
+        LinkFixCallback defaultLinkCallback;
+        LinkFixCallback userLinkCallback;
         boolean noImage;
         int clickable;
         OnImageClickListener onImageClickListener;
@@ -113,11 +114,13 @@ public final class RichTextConfig {
             this.clickable = 0;
             this.cacheType = CacheType.LAYOUT;
             this.imageGetter = new DefaultImageGetter();
-            this.linkFixCallback = new LinkFixCallback() {
+            this.defaultLinkCallback = new LinkFixCallback() {
                 @Override
                 public void fix(LinkHolder holder) {
                     holder.setColor(Color.parseColor("#54CFC7"));
                     holder.setUnderLine(false);
+                    if (userLinkCallback != null)
+                        userLinkCallback.fix(holder);
                 }
             };
         }
@@ -184,13 +187,7 @@ public final class RichTextConfig {
          * @return RichTextConfigBuild
          */
         public RichTextConfigBuild linkFix(final LinkFixCallback callback) {
-            this.linkFixCallback = new LinkFixCallback() {
-                @Override
-                public void fix(LinkHolder holder) {
-                    callback.fix(holder);
-                    linkFixCallback.fix(holder);
-                }
-            };
+            this.userLinkCallback = callback;
             return this;
         }
 
