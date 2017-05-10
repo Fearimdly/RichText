@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 def version_code = 47
-def version_name = "2.4.1.3"
+def version_name = "2.4.1.4"
 
 android {
     compileSdkVersion 24
