@@ -136,6 +136,12 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
         return from(source, RichType.MARKDOWN);
     }
 
+    public static Spanned spannedFromMarkdown(String source, TextView textView) {
+        RichTextConfig.RichTextConfigBuild build = new RichTextConfig.RichTextConfigBuild(source, RichType.MARKDOWN);
+        RichText richText = build.into(textView);
+        return (Spanned) richText.generateRichText();
+    }
+
     public static RichTextConfig.RichTextConfigBuild from(String source, @RichType int richType) {
         return new RichTextConfig.RichTextConfigBuild(source, richType);
     }

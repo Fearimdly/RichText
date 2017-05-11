@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 def version_code = 47
-def version_name = "2.4.1.4"
+def version_name = "2.4.1.5"
 
 android {
     compileSdkVersion 24
@@ -37,7 +37,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
-    compile 'com.worktile.markdown:markdown:1.0.5.2'
+    compile 'com.worktile.markdown:markdown:1.0.5.4'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
 }
 
