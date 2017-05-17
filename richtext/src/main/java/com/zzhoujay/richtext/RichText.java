@@ -31,6 +31,12 @@ import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+
 /**
  * Created by zhou on 16-5-28.
  * 富文本生成器
@@ -149,12 +155,21 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
     void generateAndSet() {
         final TextView textView = textViewSoftReference.get();
         if (textView != null) {
-            textView.post(new Runnable() {
-                @Override
-                public void run() {
-                    textView.setText(generateRichText());
-                }
-            });
+            Observable.just(1)
+                    .map(new Function<Integer, CharSequence>() {
+                        @Override
+                        public CharSequence apply(Integer integer) throws Exception {
+                            return generateRichText();
+                        }
+                    })
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<CharSequence>() {
+                        @Override
+                        public void accept(CharSequence charSequence) throws Exception {
+                            textView.setText(charSequence);
+                        }
+                    });
         }
     }
 
