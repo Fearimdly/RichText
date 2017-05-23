@@ -5,8 +5,8 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.util.LruCache;
 import android.support.v7.widget.TintContextWrapper;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -16,49 +16,31 @@ import android.widget.TextView;
 import com.zzhoujay.richtext.callback.ImageLoadNotify;
 import com.zzhoujay.richtext.ext.HtmlTagHandler;
 import com.zzhoujay.richtext.ext.LongClickableLinkMovementMethod;
-import com.zzhoujay.richtext.ext.MD5;
+import com.zzhoujay.richtext.ig.BitmapPool;
 import com.zzhoujay.richtext.parser.CachedSpannedParser;
 import com.zzhoujay.richtext.parser.Html2SpannedParser;
 import com.zzhoujay.richtext.parser.ImageGetterWrapper;
 import com.zzhoujay.richtext.parser.Markdown2SpannedParser;
 import com.zzhoujay.richtext.parser.SpannedParser;
 
+import java.io.File;
 import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by zhou on 16-5-28.
  * 富文本生成器
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class RichText implements ImageGetterWrapper, ImageLoadNotify {
 
-    private static final LruCache<String, SoftReference<SpannableStringBuilder>> richCache;
-    private static final WeakHashMap<Object, HashSet<WeakReference<RichText>>> instances;
+    public static boolean debugMode = false;
 
-    static {
-        richCache = new LruCache<>(20);
-        instances = new WeakHashMap<>();
-    }
 
     static void bind(Object tag, RichText richText) {
-        HashSet<WeakReference<RichText>> richTexts = instances.get(tag);
-        if (richTexts == null) {
-            richTexts = new HashSet<>();
-            instances.put(tag, richTexts);
-        }
-        richTexts.add(new WeakReference<>(richText));
+        RichTextPool.getPool().bind(tag, richText);
     }
 
     /**
@@ -67,31 +49,41 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
      * @param tag TAG
      */
     public static void clear(Object tag) {
-        HashSet<WeakReference<RichText>> richTexts = instances.get(tag);
-        if (richTexts != null) {
-            for (WeakReference<RichText> weakReference : richTexts) {
-                RichText richText = weakReference.get();
-                if (richText != null) {
-                    richText.clear();
-                }
-            }
-        }
-        instances.remove(tag);
+        RichTextPool.getPool().clear(tag);
     }
 
-    private static void cache(String source, SpannableStringBuilder ssb) {
-        ssb = new SpannableStringBuilder(ssb);
-        ssb.setSpan(new CachedSpannedParser.Cached(), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        richCache.put(MD5.generate(source), new SoftReference<>(ssb));
+
+    /**
+     * 设置缓存目录，若不设置将不会对图片进行本地缓存
+     *
+     * @param cacheDir 缓存目录，请确保对该目录有读写权限
+     */
+    public static void initCacheDir(File cacheDir) {
+        BitmapPool.setCacheDir(cacheDir);
     }
 
-    private static SpannableStringBuilder loadCache(String source) {
-        SoftReference<SpannableStringBuilder> cache = richCache.get(MD5.generate(source));
-        SpannableStringBuilder ssb = cache == null ? null : cache.get();
-        if (ssb != null) {
-            return new SpannableStringBuilder(ssb);
+    /**
+     * 清除缓存
+     */
+    public static void recycle() {
+        BitmapPool.getPool().clear();
+        RichTextPool.getPool().recycle();
+    }
+
+    /**
+     * 设置缓存目录，若不设置将不会对图片进行本地缓存
+     *
+     * @param context Context
+     */
+    public static void initCacheDir(Context context) {
+        File cacheDir = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+            cacheDir = context.getExternalCacheDir();
         }
-        return null;
+        if (cacheDir == null) {
+            cacheDir = context.getCacheDir();
+        }
+        initCacheDir(cacheDir);
     }
 
     private static final String TAG_TARGET = "target";
@@ -155,21 +147,15 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
     void generateAndSet() {
         final TextView textView = textViewSoftReference.get();
         if (textView != null) {
-            Observable.just(1)
-                    .map(new Function<Integer, CharSequence>() {
-                        @Override
-                        public CharSequence apply(Integer integer) throws Exception {
-                            return generateRichText();
-                        }
-                    })
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Consumer<CharSequence>() {
-                        @Override
-                        public void accept(CharSequence charSequence) throws Exception {
-                            textView.setText(charSequence);
-                        }
-                    });
+            textView.post(new Runnable() {
+                @Override
+                public void run() {
+                    textView.setText(generateRichText());
+                    if (config.callback != null) {
+                        config.callback.done(false);
+                    }
+                }
+            });
         }
     }
 
@@ -190,7 +176,7 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
         }
         SpannableStringBuilder spannableStringBuilder = null;
         if (config.cacheType > CacheType.NONE) {
-            spannableStringBuilder = loadCache(config.source);
+            spannableStringBuilder = RichTextPool.getPool().loadCache(config.source);
         }
         if (spannableStringBuilder == null) {
             spannableStringBuilder = parseRichText();
@@ -211,6 +197,9 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
         if (spanned instanceof SpannableStringBuilder) {
             spannableStringBuilder = (SpannableStringBuilder) spanned;
         } else {
+            if (spanned == null) {
+                spanned = new SpannableString("");
+            }
             spannableStringBuilder = new SpannableStringBuilder(spanned);
         }
         return spannableStringBuilder;
@@ -234,14 +223,16 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
             if (TextUtils.isEmpty(src)) {
                 continue;
             }
-            holder = new ImageHolder(src, position);
-            Matcher imageWidthMatcher = IMAGE_WIDTH_PATTERN.matcher(image);
-            if (imageWidthMatcher.find()) {
-                holder.setWidth(parseStringToInteger(imageWidthMatcher.group(2).trim()));
-            }
-            Matcher imageHeightMatcher = IMAGE_HEIGHT_PATTERN.matcher(image);
-            if (imageHeightMatcher.find()) {
-                holder.setHeight(parseStringToInteger(imageHeightMatcher.group(2).trim()));
+            holder = new ImageHolder(src, position, config);
+            if (!config.autoFix && !config.resetSize) {
+                Matcher imageWidthMatcher = IMAGE_WIDTH_PATTERN.matcher(image);
+                if (imageWidthMatcher.find()) {
+                    holder.setWidth(parseStringToInteger(imageWidthMatcher.group(2).trim()));
+                }
+                Matcher imageHeightMatcher = IMAGE_HEIGHT_PATTERN.matcher(image);
+                if (imageHeightMatcher.find()) {
+                    holder.setHeight(parseStringToInteger(imageHeightMatcher.group(2).trim()));
+                }
             }
             imageHolderMap.put(holder.getSource(), holder);
             position++;
@@ -332,32 +323,20 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
         }
         ImageHolder holder;
         if (config.richType == RichType.MARKDOWN) {
-            holder = new ImageHolder(source, loadingCount - 1);
+            holder = new ImageHolder(source, loadingCount - 1, config);
             imageHolderMap.put(source, holder);
         } else {
             holder = imageHolderMap.get(source);
             if (holder == null) {
-                holder = new ImageHolder(source, loadingCount - 1);
+                holder = new ImageHolder(source, loadingCount - 1, config);
                 imageHolderMap.put(source, holder);
             }
         }
-        if (isGif(holder.getSource())) {
-            holder.setImageType(ImageHolder.ImageType.GIF);
-        } else {
-            holder.setImageType(ImageHolder.ImageType.JPG);
-        }
         holder.setImageState(ImageHolder.ImageState.INIT);
-        if (!config.autoFix && config.imageFixCallback != null) {
+        if (config.imageFixCallback != null) {
             config.imageFixCallback.onInit(holder);
             if (!holder.isShow()) {
                 return null;
-            }
-        } else {
-            int w = textView.getWidth() - textView.getPaddingLeft() - textView.getPaddingRight();
-            if (holder.getWidth() > w) {
-                float r = (float) w / holder.getWidth();
-                holder.setWidth(w);
-                holder.setHeight((int) (r * holder.getHeight()));
             }
         }
         return config.imageGetter.getDrawable(holder, config, textView);
@@ -372,7 +351,18 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
                 if (config.cacheType >= CacheType.LAYOUT) {
                     SpannableStringBuilder ssb = richText.get();
                     if (ssb != null) {
-                        cache(config.source, ssb);
+                        RichTextPool.getPool().cache(config.source, ssb);
+                    }
+                }
+                if (config.callback != null) {
+                    TextView textView = textViewSoftReference.get();
+                    if (textView != null) {
+                        textView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                config.callback.done(true);
+                            }
+                        });
                     }
                 }
             }

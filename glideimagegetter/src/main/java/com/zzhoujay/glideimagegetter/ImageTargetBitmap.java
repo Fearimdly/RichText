@@ -1,6 +1,7 @@
 package com.zzhoujay.glideimagegetter;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.widget.TextView;
@@ -19,8 +20,8 @@ import com.zzhoujay.richtext.drawable.DrawableWrapper;
 class ImageTargetBitmap extends ImageTarget<Bitmap> {
 
 
-    ImageTargetBitmap(TextView textView, DrawableWrapper drawableWrapper, ImageHolder holder, RichTextConfig config, ImageLoadNotify imageLoadNotify) {
-        super(textView, drawableWrapper, holder, config, imageLoadNotify);
+    ImageTargetBitmap(TextView textView, DrawableWrapper drawableWrapper, ImageHolder holder, RichTextConfig config, ImageLoadNotify imageLoadNotify, Rect rect) {
+        super(textView, drawableWrapper, holder, config, imageLoadNotify, rect);
     }
 
     @Override
@@ -39,22 +40,21 @@ class ImageTargetBitmap extends ImageTarget<Bitmap> {
         }
         TextView textView = textViewWeakReference.get();
         holder.setImageState(ImageHolder.ImageState.READY);
-        holder.setImageWidth(resource.getWidth());
-        holder.setImageHeight(resource.getHeight());
+        holder.setSize(resource.getWidth(), resource.getHeight());
         Drawable drawable = new BitmapDrawable(textView.getContext().getResources(), resource);
         drawableWrapper.setDrawable(drawable);
-        if (holder.getCachedBound() != null) {
-            drawableWrapper.setBounds(holder.getCachedBound());
+        if (rect != null) {
+            drawableWrapper.setBounds(rect);
         } else {
             if (!config.autoFix && config.imageFixCallback != null) {
-                config.imageFixCallback.onFix(holder);
+                config.imageFixCallback.onImageReady(holder, resource.getWidth(), resource.getHeight());
             }
             if (config.autoFix || holder.isAutoFix() || !holder.isInvalidateSize()) {
                 int width = getRealWidth();
                 int height = (int) ((float) resource.getHeight() * width / resource.getWidth());
                 drawableWrapper.setBounds(0, 0, width, height);
             } else {
-                drawableWrapper.setBounds(0, 0, (int) holder.getScaleWidth(), (int) holder.getScaleHeight());
+                drawableWrapper.setBounds(0, 0, holder.getWidth(), holder.getHeight());
             }
         }
         resetText();

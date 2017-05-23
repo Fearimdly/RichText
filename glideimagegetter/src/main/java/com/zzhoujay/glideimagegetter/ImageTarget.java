@@ -2,6 +2,7 @@ package com.zzhoujay.glideimagegetter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v7.widget.TintContextWrapper;
@@ -28,13 +29,15 @@ abstract class ImageTarget<T> extends BaseTarget<T> implements Recyclable {
     final ImageHolder holder;
     private final WeakReference<ImageLoadNotify> imageLoadNotifyWeakReference;
     final RichTextConfig config;
+    final Rect rect;
 
-    ImageTarget(TextView textView, DrawableWrapper drawableWrapper, ImageHolder holder, RichTextConfig config, ImageLoadNotify imageLoadNotify) {
+    ImageTarget(TextView textView, DrawableWrapper drawableWrapper, ImageHolder holder, RichTextConfig config, ImageLoadNotify imageLoadNotify, Rect rect) {
         this.textViewWeakReference = new WeakReference<>(textView);
         this.urlDrawableWeakReference = new WeakReference<>(drawableWrapper);
         this.holder = holder;
         this.config = config;
         this.imageLoadNotifyWeakReference = new WeakReference<>(imageLoadNotify);
+        this.rect = rect;
     }
 
     @Override
@@ -49,11 +52,11 @@ abstract class ImageTarget<T> extends BaseTarget<T> implements Recyclable {
         }
         holder.setImageState(ImageHolder.ImageState.LOADING);
         drawableWrapper.setDrawable(placeholder);
-        if (holder.getCachedBound() != null) {
-            drawableWrapper.setBounds(holder.getCachedBound());
+        if (rect != null) {
+            drawableWrapper.setBounds(rect);
         } else {
             if (!config.autoFix && config.imageFixCallback != null) {
-                config.imageFixCallback.onFix(holder);
+                config.imageFixCallback.onLoading(holder);
             }
             int width;
             int height = 0;
@@ -67,8 +70,8 @@ abstract class ImageTarget<T> extends BaseTarget<T> implements Recyclable {
                     height = width / 2;
                 }
             } else {
-                width = (int) holder.getScaleWidth();
-                height = (int) holder.getScaleHeight();
+                width = holder.getWidth();
+                height = holder.getHeight();
             }
             drawableWrapper.setBounds(0, 0, width, height);
         }
@@ -86,13 +89,12 @@ abstract class ImageTarget<T> extends BaseTarget<T> implements Recyclable {
             return;
         }
         holder.setImageState(ImageHolder.ImageState.FAILED);
-        holder.setException(e);
         drawableWrapper.setDrawable(errorDrawable);
-        if (holder.getCachedBound() != null) {
-            drawableWrapper.setBounds(holder.getCachedBound());
+        if (rect != null) {
+            drawableWrapper.setBounds(rect);
         } else {
             if (!config.autoFix && config.imageFixCallback != null) {
-                config.imageFixCallback.onFix(holder);
+                config.imageFixCallback.onFailure(holder, e);
             }
             int width;
             int height = 0;
@@ -106,8 +108,8 @@ abstract class ImageTarget<T> extends BaseTarget<T> implements Recyclable {
                     height = width / 2;
                 }
             } else {
-                width = (int) holder.getScaleWidth();
-                height = (int) holder.getScaleHeight();
+                width = holder.getWidth();
+                height = holder.getHeight();
             }
             drawableWrapper.setBounds(0, 0, width, height);
         }
@@ -120,10 +122,11 @@ abstract class ImageTarget<T> extends BaseTarget<T> implements Recyclable {
         int maxWidth = getRealWidth(), maxHeight = Integer.MAX_VALUE;
         if (config.imageFixCallback != null) {
             holder.setImageState(ImageHolder.ImageState.SIZE_READY);
-            config.imageFixCallback.onFix(holder);
-            if (holder.getMaxWidth() > 0 && holder.getMaxHeight() > 0) {
-                maxWidth = holder.getMaxWidth();
-                maxHeight = holder.getMaxHeight();
+            ImageHolder.SizeHolder sizeHolder = new ImageHolder.SizeHolder(0, 0);
+            config.imageFixCallback.onSizeReady(holder, 0, 0, sizeHolder);
+            if (sizeHolder.isInvalidateSize()) {
+                maxWidth = sizeHolder.getWidth();
+                maxHeight = sizeHolder.getHeight();
             }
         }
         cb.onSizeReady(maxWidth, maxHeight);

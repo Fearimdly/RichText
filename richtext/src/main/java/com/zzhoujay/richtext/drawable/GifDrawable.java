@@ -10,49 +10,50 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.widget.TextView;
 
 /**
  * Created by zhou on 2017/2/21.
+ * 支持播放Gif图片的自定义Drawable
  */
 
 public class GifDrawable extends Drawable {
 
-    private static final int next = 1010;
-
+    private static final int what = 0x357;
 
     private Movie movie;
     private long start;
     private int height;
     private int width;
-    private Handler handler;
     private boolean running;
     private TextView textView;
     private float scaleX;
     private float scaleY;
-
     private Paint paint;
+
+    private Handler handler;
 
     public GifDrawable(Movie movie, int height, int width) {
         this.movie = movie;
         this.height = height;
         this.width = width;
+        setBounds(0, 0, width, height);
         scaleX = scaleY = 1.0f;
         paint = new Paint();
         handler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                if (msg.what == next) {
-                    if (running) {
-                        handler.obtainMessage(next).sendToTarget();
-                    }
+                if (msg.what == what && running && textView != null) {
+                    textView.invalidate();
+                    sendEmptyMessageDelayed(what, 33);
                 }
             }
         };
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void draw(@NonNull Canvas canvas) {
         long now = android.os.SystemClock.uptimeMillis();
         if (start == 0) { // first time
             start = now;
@@ -67,14 +68,11 @@ public class GifDrawable extends Drawable {
             Rect bounds = getBounds();
             canvas.scale(scaleX, scaleY);
             movie.draw(canvas, bounds.left, bounds.top);
-            if (textView != null) {
-                textView.setText(textView.getText());
-            }
         }
     }
 
     @Override
-    public void setBounds(Rect bounds) {
+    public void setBounds(@NonNull Rect bounds) {
         super.setBounds(bounds);
         calculateScale();
     }
@@ -93,11 +91,12 @@ public class GifDrawable extends Drawable {
     public void start(TextView textView) {
         running = true;
         this.textView = textView;
-        handler.obtainMessage(next).sendToTarget();
+        handler.sendEmptyMessage(what);
     }
 
     public void stop() {
         running = false;
+        this.textView = null;
     }
 
     @Override

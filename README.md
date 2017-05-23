@@ -13,6 +13,7 @@
 * 支持GIF图片
 * 支持Base64编码
 * 自持自定义图片加载器
+* 支持内存和磁盘双缓存
 
 ### 效果
 
@@ -22,17 +23,22 @@
 ### gradle中引用的方法
 
 ```
-compile 'com.zzhoujay.richtext:richtext:2.4.0'
+compile 'com.zzhoujay.richtext:richtext:2.5.2'
 ```
 
-### Glide图片加载器
+### Glide图片加载器 （已不建议使用，可以用默认图片加载器替代）
 
 ```
-compile 'com.zzhoujay.glideimagegetter:glideimagegetter:1.0.1'
+compile 'com.zzhoujay.glideimagegetter:glideimagegetter:1.0.5'
 ```
 
 关于Glide图片加载器和默认图片加载器的区别请看[这里](https://github.com/zzhoujay/RichText/wiki/自定义图片加载器)
 
+### 注意
+
+在第一次调用RichText之前先调用`RichText.initCacheDir()`方法设置缓存目录，如果未调用则将不会进行本地缓存
+
+ImageFixCallback的回调方法不一定是在主线程回调，注意不要进行UI操作
 
 ### 使用方式
 

@@ -8,6 +8,7 @@ import com.zzhoujay.richtext.ImageHolder;
 import com.zzhoujay.richtext.RichTextConfig;
 import com.zzhoujay.richtext.callback.ImageLoadNotify;
 import com.zzhoujay.richtext.drawable.DrawableWrapper;
+import com.zzhoujay.richtext.exceptions.ImageDecodeException;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -23,8 +24,8 @@ import okhttp3.Response;
  */
 class CallbackImageLoader extends AbstractImageLoader<InputStream> implements Callback {
 
-    CallbackImageLoader(ImageHolder holder, RichTextConfig config, TextView textView, DrawableWrapper drawableWrapper, ImageLoadNotify iln) {
-        super(holder, config, textView, drawableWrapper, iln, SourceDecode.REMOTE_SOURCE_DECODE);
+    CallbackImageLoader(ImageHolder holder, RichTextConfig config, TextView textView, DrawableWrapper drawableWrapper, ImageLoadNotify iln, BitmapWrapper.SizeCacheHolder sizeCacheHolder) {
+        super(holder, config, textView, drawableWrapper, iln, SourceDecode.REMOTE_SOURCE_DECODE, sizeCacheHolder);
         onLoading();
     }
 
@@ -35,13 +36,21 @@ class CallbackImageLoader extends AbstractImageLoader<InputStream> implements Ca
             BufferedInputStream stream = new BufferedInputStream(inputStream);
             BitmapFactory.Options options = new BitmapFactory.Options();
             int[] inDimens = getDimensions(stream, options);
-            options.inSampleSize = onSizeReady(inDimens[0], inDimens[1]);
+            BitmapWrapper.SizeCacheHolder sizeCacheHolder = super.sizeCacheHolder;
+            if (sizeCacheHolder == null) {
+                sizeCacheHolder = loadSizeCacheHolder();
+            }
+            if (sizeCacheHolder == null) {
+                options.inSampleSize = onSizeReady(inDimens[0], inDimens[1]);
+            } else {
+                options.inSampleSize = getSampleSize(inDimens[0], inDimens[1], sizeCacheHolder.rect.width(), sizeCacheHolder.rect.height());
+            }
             options.inPreferredConfig = Bitmap.Config.RGB_565;
             onResourceReady(sourceDecode.decode(holder, stream, options));
             stream.close();
             inputStream.close();
         } catch (Exception e) {
-            onFailure(e);
+            onFailure(new ImageDecodeException(e));
         }
     }
 

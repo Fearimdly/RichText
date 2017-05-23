@@ -1,6 +1,7 @@
 package com.zzhoujay.glideimagegetter;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.widget.TextView;
@@ -24,8 +25,8 @@ class ImageTargetGif extends ImageTarget<GifDrawable> implements Drawable.Callba
 
     private SoftReference<GifDrawable> gifDrawableSoftReference;
 
-    ImageTargetGif(TextView textView, DrawableWrapper drawableWrapper, ImageHolder holder, RichTextConfig config, ImageLoadNotify imageLoadNotify) {
-        super(textView, drawableWrapper, holder, config, imageLoadNotify);
+    ImageTargetGif(TextView textView, DrawableWrapper drawableWrapper, ImageHolder holder, RichTextConfig config, ImageLoadNotify imageLoadNotify, Rect rect) {
+        super(textView, drawableWrapper, holder, config, imageLoadNotify, rect);
     }
 
 
@@ -53,14 +54,13 @@ class ImageTargetGif extends ImageTarget<GifDrawable> implements Drawable.Callba
         holder.setImageState(ImageHolder.ImageState.READY);
         gifDrawableSoftReference = new SoftReference<>(resource);
         Bitmap first = resource.getFirstFrame();
-        holder.setImageWidth(first.getWidth());
-        holder.setImageHeight(first.getHeight());
+        holder.setSize(first.getWidth(), first.getHeight());
         drawableWrapper.setDrawable(resource);
-        if (holder.getCachedBound() != null) {
-            drawableWrapper.setBounds(holder.getCachedBound());
+        if (rect != null) {
+            drawableWrapper.setBounds(rect);
         } else {
             if (!config.autoFix && config.imageFixCallback != null) {
-                config.imageFixCallback.onFix(holder);
+                config.imageFixCallback.onImageReady(holder, first.getWidth(), first.getHeight());
             }
             if (config.autoFix || holder.isAutoFix() || !holder.isInvalidateSize()) {
                 int width = getRealWidth();
