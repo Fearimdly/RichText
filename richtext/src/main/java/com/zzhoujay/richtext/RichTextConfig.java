@@ -8,6 +8,8 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.v4.content.ContextCompat;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextUtils;
 import android.widget.TextView;
 
 import com.zzhoujay.richtext.callback.Callback;
@@ -508,8 +510,13 @@ public final class RichTextConfig {
             } else {
                 spannedParser = new Html2SpannedParser(new HtmlTagHandler());
             }
-            spannableStringBuilder = new SpannableStringBuilder();
-            spannableStringBuilder.append(spannedParser.parse(source));
+            spannableStringBuilder = new SpannableStringBuilder("");
+            if (source != null) {
+                Spanned spanned = spannedParser.parse(source);
+                if (spanned != null) {
+                    spannableStringBuilder.append(spanned);
+                }
+            }
             return this;
         }
 
