@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.worktile.richtext</groupId>
   <artifactId>richtext</artifactId>
-  <version>2.5.2.3</version>
+  <version>2.5.2.4</version>
   <packaging>aar</packaging>
   <dependencies>
     <dependency>

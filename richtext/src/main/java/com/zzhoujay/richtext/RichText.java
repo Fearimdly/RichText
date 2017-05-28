@@ -110,9 +110,9 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
         this.config = config;
         this.textViewSoftReference = new SoftReference<>(textView);
         if (config.richType == RichType.MARKDOWN) {
-            spannedParser = new Markdown2SpannedParser(textView);
+            spannedParser = new Markdown2SpannedParser(textView.getContext());
         } else {
-            spannedParser = new Html2SpannedParser(new HtmlTagHandler(textView));
+            spannedParser = new Html2SpannedParser(new HtmlTagHandler());
         }
         if (config.clickable > 0) {
             textView.setMovementMethod(new LongClickableLinkMovementMethod());
@@ -177,6 +177,9 @@ public class RichText implements ImageGetterWrapper, ImageLoadNotify {
         SpannableStringBuilder spannableStringBuilder = null;
         if (config.cacheType > CacheType.NONE) {
             spannableStringBuilder = RichTextPool.getPool().loadCache(config.source);
+        }
+        if (spannableStringBuilder == null) {
+            spannableStringBuilder = config.spannableStringBuilder;
         }
         if (spannableStringBuilder == null) {
             spannableStringBuilder = parseRichText();

@@ -1,11 +1,13 @@
 package com.zzhoujay.richtext;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.v4.content.ContextCompat;
+import android.text.SpannableStringBuilder;
 import android.widget.TextView;
 
 import com.zzhoujay.richtext.callback.Callback;
@@ -16,7 +18,11 @@ import com.zzhoujay.richtext.callback.OnImageClickListener;
 import com.zzhoujay.richtext.callback.OnImageLongClickListener;
 import com.zzhoujay.richtext.callback.OnUrlClickListener;
 import com.zzhoujay.richtext.callback.OnUrlLongClickListener;
+import com.zzhoujay.richtext.ext.HtmlTagHandler;
 import com.zzhoujay.richtext.ig.DefaultImageGetter;
+import com.zzhoujay.richtext.parser.Html2SpannedParser;
+import com.zzhoujay.richtext.parser.Markdown2SpannedParser;
+import com.zzhoujay.richtext.parser.SpannedParser;
 
 import java.lang.ref.WeakReference;
 
@@ -52,6 +58,7 @@ public final class RichTextConfig {
     public final Callback callback; // 解析完成的回调
     public final ImageHolder.BorderHolder borderHolder;
     final ImageGetter imageGetter; // 图片加载器，默认为GlideImageGetter
+    public SpannableStringBuilder spannableStringBuilder;
 
 
     private RichTextConfig(RichTextConfigBuild config) {
@@ -59,7 +66,7 @@ public final class RichTextConfig {
                 config.defaultLinkCallback, config.noImage, config.clickable, config.onImageClickListener,
                 config.onUrlClickListener, config.onImageLongClickListener, config.onUrlLongClickListener,
                 config.placeHolder, config.errorImage, config.imageGetter, config.callback, config.autoPlay,
-                config.scaleType, config.width, config.height, config.borderHolder);
+                config.scaleType, config.width, config.height, config.borderHolder, config.spannableStringBuilder);
     }
 
     private RichTextConfig(String source, int richType, boolean autoFix, boolean resetSize, @CacheType int cacheType,
@@ -68,7 +75,7 @@ public final class RichTextConfig {
                            OnImageLongClickListener onImageLongClickListener, OnUrlLongClickListener onUrlLongClickListener,
                            Drawable placeHolder, Drawable errorImage, ImageGetter imageGetter, Callback callback,
                            boolean autoPlay, @ImageHolder.ScaleType int scaleType, int width, int height,
-                           ImageHolder.BorderHolder borderHolder) {
+                           ImageHolder.BorderHolder borderHolder, SpannableStringBuilder spannableStringBuilder) {
         this.source = source;
         this.richType = richType;
         this.autoFix = autoFix;
@@ -97,6 +104,7 @@ public final class RichTextConfig {
             }
         }
         this.clickable = clickable;
+        this.spannableStringBuilder = spannableStringBuilder;
     }
 
     @Override
@@ -172,6 +180,7 @@ public final class RichTextConfig {
         int width;
         int height;
         ImageHolder.BorderHolder borderHolder;
+        public SpannableStringBuilder spannableStringBuilder;
 
 
         RichTextConfigBuild(String source, int richType) {
@@ -489,6 +498,18 @@ public final class RichTextConfig {
          */
         public RichTextConfigBuild done(Callback callback) {
             this.callback = callback;
+            return this;
+        }
+
+        public RichTextConfigBuild generate(Context context) {
+            SpannedParser spannedParser;
+            if (richType == RichType.MARKDOWN) {
+                spannedParser = new Markdown2SpannedParser(context);
+            } else {
+                spannedParser = new Html2SpannedParser(new HtmlTagHandler());
+            }
+            spannableStringBuilder = new SpannableStringBuilder();
+            spannableStringBuilder.append(spannedParser.parse(source));
             return this;
         }
 

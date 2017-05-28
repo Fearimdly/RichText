@@ -28,12 +28,10 @@ public class HtmlTagHandler implements Html.TagHandler {
     private Stack<Integer> stack;
     private Stack<Boolean> list;
     private int index = 0;
-    private SoftReference<TextView> textViewSoftReference;
 
-    public HtmlTagHandler(TextView textView) {
+    public HtmlTagHandler() {
         stack = new Stack<>();
         list = new Stack<>();
-        this.textViewSoftReference = new SoftReference<>(textView);
     }
 
     @Override
@@ -89,11 +87,7 @@ public class HtmlTagHandler implements Html.TagHandler {
                     i = ++index;
                 }
                 out.append('\n');
-                TextView textView = textViewSoftReference.get();
-                if (textView == null) {
-                    return;
-                }
-                MarkDownBulletSpan bulletSpan = new MarkDownBulletSpan(list.size() - 1, h1_color, i, textView);
+                MarkDownBulletSpan bulletSpan = new MarkDownBulletSpan(list.size() - 1, h1_color, i);
                 out.setSpan(bulletSpan, start, out.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 break;
         }
