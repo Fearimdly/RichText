@@ -1,6 +1,7 @@
 package com.zzhoujay.richtext.parser;
 
 import android.content.Context;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.widget.TextView;
 
@@ -21,7 +22,11 @@ public class Markdown2SpannedParser implements SpannedParser {
     @Override
     public Spanned parse(String source) {
         synchronized (this) {
-            return MarkDown.fromMarkdown(source, null, mContext);
+            try {
+                return MarkDown.fromMarkdown(source, null, mContext);
+            } catch (Exception ignored) {
+                return SpannableStringBuilder.valueOf(source);
+            }
         }
     }
 }
