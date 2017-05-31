@@ -20,6 +20,8 @@ public class Markdown2SpannedParser implements SpannedParser {
 
     @Override
     public Spanned parse(String source) {
-        return MarkDown.fromMarkdown(source, null, mContext);
+        synchronized (this) {
+            return MarkDown.fromMarkdown(source, null, mContext);
+        }
     }
 }
