@@ -555,5 +555,15 @@ public final class RichTextConfig {
             richText.generateAndSet();
             return richText;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof RichTextConfigBuild) {
+                RichTextConfigBuild newBuild = (RichTextConfigBuild) obj;
+                return source.equals(newBuild.source);
+            } else {
+                return false;
+            }
+        }
     }
 }
