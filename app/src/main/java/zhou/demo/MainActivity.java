@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         RichText.initCacheDir(this);
         final TextView textView = (TextView) findViewById(R.id.text);
 
-        RichText.from(issue149).type(RichType.MARKDOWN).into(textView);
+        RichText.from(issue150).type(RichType.MARKDOWN).into(textView);
     }
 
     @Override

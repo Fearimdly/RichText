@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
-def version_code = 60
-def version_name = "2.5.2.8"
+def version_code = 61
+def version_name = "2.5.2.9"
 
 android {
     compileSdkVersion 24
@@ -37,7 +37,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
-    compile 'com.worktile.markdown:markdown:1.0.6.1'
+    compile 'com.worktile.markdown:markdown:1.0.6.3'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
     compile 'com.jakewharton:disklrucache:2.0.2'
