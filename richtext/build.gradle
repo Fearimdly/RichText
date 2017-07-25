@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 def version_code = 62
-def version_name = "2.5.3.0"
+def version_name = "2.5.3.3"
 
 android {
     compileSdkVersion 24
@@ -37,17 +37,63 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
-    compile 'com.worktile.markdown:markdown:1.0.6.3'
+    compile 'com.worktile.markdown:markdown:1.0.6.6'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
     compile 'com.squareup.okhttp3:okhttp:3.5.0'
     compile 'com.jakewharton:disklrucache:2.0.2'
 }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        repository(url: "file://" + file("maven"))
-        pom.groupId = "com.worktile.richtext"
-        pom.artifactId = 'richtext'
-        pom.version = version_name
+def generatePom(org.gradle.api.publish.maven.MavenPom pom) {
+    pom.withXml {
+        def dependenciesNode = asNode().appendNode('dependencies')
+        configurations.compile.allDependencies.each {
+            if (it.name == "unspecified") return
+            def dependencyNode = dependenciesNode.appendNode('dependency')
+            dependencyNode.appendNode('groupId', it.group)
+            dependencyNode.appendNode('artifactId', it.name)
+            dependencyNode.appendNode('version', it.version)
+            it.artifacts.each {
+                dependencyNode.appendNode('type', it.type)
+            }
+
+            def exclusionsNode = dependencyNode.appendNode('exclusions')
+            it.excludeRules.each {
+                def exclusionNode = exclusionsNode.appendNode('exclusion')
+                exclusionNode.appendNode('groupId', it.group)
+                exclusionNode.appendNode('artifactId', it.module)
+            }
+            if (!it.isTransitive()) {
+                def exclusionNode = exclusionsNode.appendNode('exclusion')
+                exclusionNode.appendNode('groupId', '*')
+                exclusionNode.appendNode('artifactId', '*')
+            }
+        }
+    }
+}
+
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "source"
+}
+
+publishing {
+    publications {
+        base(MavenPublication) {
+            groupId 'com.worktile.richtext'
+            artifactId 'richtext'
+            version version_name
+            artifact(sourceJar)
+            artifact("$buildDir/outputs/aar/richtext-release.aar")
+            generatePom(pom)
+        }
+    }
+    repositories {
+        maven {
+            url "s3://worktile-maven"
+            credentials(AwsCredentials) {
+                accessKey AWS_ACCESS_KEY
+                secretKey AWS_SECRET_KEY
+            }
+        }
     }
 }
