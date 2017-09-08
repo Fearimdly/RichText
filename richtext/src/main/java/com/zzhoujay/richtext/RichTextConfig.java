@@ -198,7 +198,7 @@ public final class RichTextConfig {
             this.defaultLinkCallback = new LinkFixCallback() {
                 @Override
                 public void fix(LinkHolder holder) {
-                    holder.setColor(Color.parseColor("#54CFC7"));
+                    holder.setColor(Color.parseColor("#22d7bb"));
                     holder.setUnderLine(false);
                     if (userLinkCallback != null)
                         userLinkCallback.fix(holder);
